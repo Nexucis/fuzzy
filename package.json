@@ -1,0 +1,27 @@
+{
+  "name": "@nexucis/fuzzy",
+  "version": "0.1.0",
+  "description": "\"small, standalone fuzzy search / fuzzy filter. browser or node\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nexucis/fuzzy.git"
+  },
+  "keywords": [
+    "fuzzy",
+    "search",
+    "filter"
+  ],
+  "author": "Augustin Husson <husson.augustin@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Nexucis/fuzzy/issues"
+  },
+  "homepage": "https://github.com/Nexucis/fuzzy#readme",
+  "devDependencies": {
+    "typescript": "^3.9.7"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "es2015",
+    "declaration": true,
+    "outDir": "./lib",
+    "module": "commonjs",
+    "sourceMap": true,
+    "strict": true,
+  },
+  "include": [
+    "src",
+    "@types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/__tests__/*"
+  ]
+}
