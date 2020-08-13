@@ -37,6 +37,14 @@ function escapeHTML(text: string): string {
     });
 }
 
+function score(intervals: FuzzyMatchingInterval[]): number {
+    let result = 0;
+    for (const interval of intervals) {
+        result = result + interval.to - interval.from + 1
+    }
+    return result
+}
+
 export interface FuzzyConfiguration {
     caseSensitive?: boolean;
     includeMatches?: boolean;
@@ -47,11 +55,16 @@ export interface FuzzyConfiguration {
     post?: string;
 }
 
+export interface FuzzyMatchingInterval {
+    from: number;
+    to: number;
+}
+
 export interface FuzzyResult {
     rendered: string;
     original: string;
     score: number;
-    indices?: { from: number; to: number }[];
+    intervals?: FuzzyMatchingInterval[];
 }
 
 export class Fuzzy {
@@ -76,35 +89,63 @@ export class Fuzzy {
         let localPattern = pattern
         let localText = text
         if (!this.caseSensitive) {
-            localPattern = localText.toLowerCase()
+            localPattern = localPattern.toLowerCase()
             localText = localText.toLowerCase()
         }
         // in case it's a perfect match, no need to loop to find which char is matching
         if (localPattern === localText) {
-            const indices = [{from: 0, to: pattern.length - 1}]
+            const intervals = [{ from: 0, to: pattern.length - 1 }]
             const result = {
                 original: text,
-                rendered: this.render(text, indices),
-                score: Infinity
+                rendered: this.render(text, intervals),
+                score: Infinity,
             } as FuzzyResult
             if (this.includeMatches) {
-                result.indices = indices
+                result.intervals = intervals
             }
             return result
         }
-        return null;
+        // otherwise let's calculate the different indices that will then be used to calculate the score
+        let patternIdx = 0;
+        const intervals = [];
+        for (let i = 0; i < localText.length && patternIdx < localPattern.length;) {
+            if (localText[i] === localPattern[patternIdx]) {
+                const interval = { from: i, to: i }
+                patternIdx++;
+                i++;
+                for (let j = i; j < localText.length && patternIdx < localPattern.length && localText[j] === localPattern[patternIdx]; j++) {
+                    interval.to = j
+                    patternIdx++
+                    i = j
+                }
+                intervals.push(interval)
+            }
+            i++;
+        }
+        if (intervals.length === 0) {
+            return null;
+        }
+        const result = {
+            original: text,
+            rendered: this.render(text, intervals),
+            score: score(intervals),
+        } as FuzzyResult
+        if (this.includeMatches) {
+            result.intervals = intervals
+        }
+        return result;
     }
 
-    render(text: string, indices: { from: number, to: number }[]): string {
+    render(text: string, intervals: FuzzyMatchingInterval[]): string {
         let rendered = ''
-        for (let i = 0; i < indices.length; i++) {
-            const currentInterval = indices[i]
+        for (let i = 0; i < intervals.length; i++) {
+            const currentInterval = intervals[i]
             let previousNotMatchingInterval = null;
             if (i === 0 && currentInterval.from !== 0) {
-                previousNotMatchingInterval = {from: 0, to: currentInterval.from - 1}
+                previousNotMatchingInterval = { from: 0, to: currentInterval.from - 1 }
             }
             if (i > 0) {
-                previousNotMatchingInterval = {from: indices[i - 1].to + 1, to: currentInterval.from - 1}
+                previousNotMatchingInterval = { from: intervals[i - 1].to + 1, to: currentInterval.from - 1 }
             }
             let previousStr = ''
             if (previousNotMatchingInterval !== null) {
@@ -115,14 +156,14 @@ export class Fuzzy {
         }
 
         // check if the last interval contains the end of the string. Otherwise add it
-        const lastInterval = indices[indices.length - 1]
+        const lastInterval = intervals[intervals.length - 1]
         if (lastInterval.to < text.length - 1) {
-            rendered = rendered + this.extractSubString(text, {from: lastInterval.to + 1, to: text.length})
+            rendered = rendered + this.extractSubString(text, { from: lastInterval.to + 1, to: text.length })
         }
         return rendered
     }
 
-    private extractSubString(text: string, interval: { from: number, to: number }) {
+    private extractSubString(text: string, interval: FuzzyMatchingInterval) {
         let str = text.substr(interval.from, interval.to - interval.from + 1)
         if (this.escapeHTML) {
             str = escapeHTML(str)
