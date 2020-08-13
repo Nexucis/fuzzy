@@ -21,20 +21,20 @@
 // SOFTWARE.
 
 export interface FuzzyConfiguration {
-    caseSensitive?: boolean,
-    includeMatches?: boolean,
-    shouldSort?: boolean,
+    caseSensitive?: boolean;
+    includeMatches?: boolean;
+    shouldSort?: boolean;
     // escapeHTML will escape any HTML tag and special char after applying the rendering
-    escapeHTML?: boolean,
-    pre?: string,
-    post?: string,
+    escapeHTML?: boolean;
+    pre?: string;
+    post?: string;
 }
 
 export interface FuzzyResult {
-    rendered?: string,
-    original: string,
-    score: number,
-    indices?: { from: number, to: number }[]
+    rendered?: string;
+    original: string;
+    score: number;
+    indices?: { from: number; to: number }[];
 }
 
 export class Fuzzy {
