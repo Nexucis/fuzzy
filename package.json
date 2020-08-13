@@ -1,7 +1,7 @@
 {
   "name": "@nexucis/fuzzy",
   "version": "0.1.0",
-  "description": "\"small, standalone fuzzy search / fuzzy filter. browser or node\"",
+  "description": "small, standalone fuzzy search / fuzzy filter. browser or node",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
