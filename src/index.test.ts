@@ -77,7 +77,7 @@ describe('partial match test', () => {
             .to.deep.equal({
             original: 'my awesome text',
             rendered: 'my awesome text',
-            score: 2,
+            score: 4,
         } as FuzzyResult);
     });
     it('default conf: sub match', () => {
@@ -86,7 +86,7 @@ describe('partial match test', () => {
             .to.deep.equal({
             original: 'my awesome text',
             rendered: 'my awesome text',
-            score: 3,
+            score: 9,
         } as FuzzyResult);
     });
     it('default conf: fuzzy match', () => {
@@ -145,7 +145,7 @@ describe('partial match test', () => {
                     to: 35,
                 },
             ],
-            score: 12,
+            score: 60,
         } as FuzzyResult)
     })
 })
@@ -158,33 +158,18 @@ describe('filter test', () => {
     });
     it('filter with no rendering', () => {
         const fuz = new Fuzzy({})
-        const list = ['lion', 'goat', 'mouse', 'dragon', 'trust me I now what I am doing']
+        const list = ['lion', 'mouse', 'dragon', 'trust me I now what I am doing', 'goat']
         expect(fuz.filter('oa', list))
             .to.deep.equal([
-                {
-                    original: 'lion',
-                    rendered: 'lion',
-                    score: 1,
-                },
-                {
-                    original: 'goat',
-                    rendered: 'goat',
-                    score: 2,
-                },
-                {
-                    original: 'mouse',
-                    rendered: 'mouse',
-                    score: 1,
-                },
-                {
-                    original: 'dragon',
-                    rendered: 'dragon',
-                    score: 1,
-                },
                 {
                     original: 'trust me I now what I am doing',
                     rendered: 'trust me I now what I am doing',
                     score: 2,
+                },
+                {
+                    original: 'goat',
+                    rendered: 'goat',
+                    score: 4,
                 },
             ]
         )
@@ -198,29 +183,13 @@ describe('filter test', () => {
                 {
                     original: 'goat',
                     rendered: 'goat',
-                    score: 2,
+                    score: 4,
                 },
                 {
                     original: 'trust me I now what I am doing',
                     rendered: 'trust me I now what I am doing',
                     score: 2,
                 },
-                {
-                    original: 'lion',
-                    rendered: 'lion',
-                    score: 1,
-                },
-                {
-                    original: 'mouse',
-                    rendered: 'mouse',
-                    score: 1,
-                },
-                {
-                    original: 'dragon',
-                    rendered: 'dragon',
-                    score: 1,
-                },
-
             ]
         )
     })

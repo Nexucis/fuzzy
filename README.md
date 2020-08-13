@@ -23,7 +23,7 @@ const list = ['lion', 'goat', 'mouse', 'dragon']
 
 console.log(fuz.filter('li', list))
 // [
-//   {rendered: 'lion', score: 2, original: 'lion'},
+//   {rendered: 'lion', score: 4, original: 'lion'},
 // ]
 //
 ```
@@ -38,7 +38,7 @@ const list = ['lion', 'goat', 'mouse', 'dragon']
 
 console.log(fuz.filter('li', list))
 // [
-//   {rendered: '<b>li</b>on', score: 2, original: 'lion'},
+//   {rendered: '<b>li</b>on', score: 4, original: 'lion'},
 // ]
 //
 ```
@@ -53,7 +53,7 @@ const list = ['lion', 'goat', 'mouse', 'dragon']
 
 console.log(fuz.filter('li', list))
 // [
-//   {rendered: '<b>li</b>on', score: 2, original: 'lion', intervales:[{from:0, to:2}]},
+//   {rendered: '<b>li</b>on', score: 4, original: 'lion', intervales:[{from:0, to:2}]},
 // ]
 //
 ```

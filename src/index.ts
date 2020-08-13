@@ -40,7 +40,7 @@ function escapeHTML(text: string): string {
 function score(intervals: FuzzyMatchingInterval[]): number {
     let result = 0;
     for (const interval of intervals) {
-        result = result + interval.to - interval.from + 1
+        result = result + (interval.to - interval.from + 1) ** 2
     }
     return result
 }
@@ -138,7 +138,7 @@ export class Fuzzy {
             }
             i++;
         }
-        if (intervals.length === 0) {
+        if (intervals.length === 0 || patternIdx !== localPattern.length) {
             return null;
         }
         const result = {
