@@ -84,6 +84,22 @@ export class Fuzzy {
         this.post = conf.post === undefined ? '' : conf.post;
     }
 
+    filter(pattern: string, list: string[]): FuzzyResult[] {
+        let result = [];
+        for (const el of list) {
+            const matchedText = this.match(pattern, el)
+            if (matchedText !== null) {
+                result.push(matchedText)
+            }
+        }
+        if (this.shouldSort) {
+            result = result.sort((a, b) => {
+                return b.score - a.score
+            })
+        }
+        return result
+    }
+
     // match will return a result if `pattern` is matching `text`,
     match(pattern: string, text: string): FuzzyResult | null {
         let localPattern = pattern

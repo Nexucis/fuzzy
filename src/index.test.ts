@@ -149,3 +149,79 @@ describe('partial match test', () => {
         } as FuzzyResult)
     })
 })
+
+describe('filter test', () => {
+    it('empty list', () => {
+        const fuz = new Fuzzy({})
+        expect(fuz.filter('ter', []))
+            .to.deep.equal([])
+    });
+    it('filter with no rendering', () => {
+        const fuz = new Fuzzy({})
+        const list = ['lion', 'goat', 'mouse', 'dragon', 'trust me I now what I am doing']
+        expect(fuz.filter('oa', list))
+            .to.deep.equal([
+                {
+                    original: 'lion',
+                    rendered: 'lion',
+                    score: 1,
+                },
+                {
+                    original: 'goat',
+                    rendered: 'goat',
+                    score: 2,
+                },
+                {
+                    original: 'mouse',
+                    rendered: 'mouse',
+                    score: 1,
+                },
+                {
+                    original: 'dragon',
+                    rendered: 'dragon',
+                    score: 1,
+                },
+                {
+                    original: 'trust me I now what I am doing',
+                    rendered: 'trust me I now what I am doing',
+                    score: 2,
+                },
+            ]
+        )
+    });
+    it('filter with no rendering, sorted', () => {
+        const fuz = new Fuzzy({ shouldSort: true })
+        const list = ['lion', 'goat', 'mouse', 'dragon', 'trust me I now what I am doing']
+        expect(fuz.filter('oa', list))
+            .to.deep.equal([
+
+                {
+                    original: 'goat',
+                    rendered: 'goat',
+                    score: 2,
+                },
+                {
+                    original: 'trust me I now what I am doing',
+                    rendered: 'trust me I now what I am doing',
+                    score: 2,
+                },
+                {
+                    original: 'lion',
+                    rendered: 'lion',
+                    score: 1,
+                },
+                {
+                    original: 'mouse',
+                    rendered: 'mouse',
+                    score: 1,
+                },
+                {
+                    original: 'dragon',
+                    rendered: 'dragon',
+                    score: 1,
+                },
+
+            ]
+        )
+    })
+})
