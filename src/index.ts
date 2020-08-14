@@ -63,6 +63,7 @@ export interface FuzzyMatchingInterval {
 export interface FuzzyResult {
     rendered: string;
     original: string;
+    index: number;
     score: number;
     intervals?: FuzzyMatchingInterval[];
 }
@@ -86,9 +87,10 @@ export class Fuzzy {
 
     filter(pattern: string, list: string[]): FuzzyResult[] {
         let result = [];
-        for (const el of list) {
-            const matchedText = this.match(pattern, el)
+        for (let i = 0; i < list.length; i++) {
+            const matchedText = this.match(pattern, list[i])
             if (matchedText !== null) {
+                matchedText.index = i;
                 result.push(matchedText)
             }
         }

@@ -162,11 +162,13 @@ describe('filter test', () => {
         expect(fuz.filter('oa', list))
             .to.deep.equal([
                 {
+                    index: 3,
                     original: 'trust me I now what I am doing',
                     rendered: 'trust me I now what I am doing',
                     score: 2,
                 },
                 {
+                    index: 4,
                     original: 'goat',
                     rendered: 'goat',
                     score: 4,
@@ -181,11 +183,13 @@ describe('filter test', () => {
             .to.deep.equal([
 
                 {
+                    index: 1,
                     original: 'goat',
                     rendered: 'goat',
                     score: 4,
                 },
                 {
+                    index: 4,
                     original: 'trust me I now what I am doing',
                     rendered: 'trust me I now what I am doing',
                     score: 2,
