@@ -76,13 +76,13 @@ export class Fuzzy {
     private readonly pre: string
     private readonly post: string;
 
-    constructor(conf: FuzzyConfiguration) {
-        this.caseSensitive = conf.caseSensitive === undefined ? false : conf.caseSensitive;
-        this.includeMatches = conf.includeMatches === undefined ? false : conf.includeMatches;
-        this.shouldSort = conf.shouldSort === undefined ? false : conf.shouldSort;
-        this.escapeHTML = conf.escapeHTML === undefined ? false : conf.escapeHTML;
-        this.pre = conf.pre === undefined ? '' : conf.pre;
-        this.post = conf.post === undefined ? '' : conf.post;
+    constructor(conf?: FuzzyConfiguration) {
+        this.caseSensitive = conf?.caseSensitive === undefined ? false : conf.caseSensitive;
+        this.includeMatches = conf?.includeMatches === undefined ? false : conf.includeMatches;
+        this.shouldSort = conf?.shouldSort === undefined ? false : conf.shouldSort;
+        this.escapeHTML = conf?.escapeHTML === undefined ? false : conf.escapeHTML;
+        this.pre = conf?.pre === undefined ? '' : conf.pre;
+        this.post = conf?.post === undefined ? '' : conf.post;
     }
 
     // filter is the method to use to filter a string list
@@ -108,7 +108,7 @@ export class Fuzzy {
     match(pattern: string, text: string, conf?: FuzzyConfiguration): FuzzyResult | null {
         let localPattern = pattern
         let localText = text
-        if (!this.caseSensitive || (conf !== undefined && conf.caseSensitive !== undefined && !conf.caseSensitive)) {
+        if (!this.caseSensitive || (conf?.caseSensitive !== undefined && !conf.caseSensitive)) {
             localPattern = localPattern.toLowerCase()
             localText = localText.toLowerCase()
         }
