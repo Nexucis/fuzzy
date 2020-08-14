@@ -4,7 +4,7 @@ import 'mocha';
 
 describe('render test', () => {
     it('default conf: shouldn t alter the string', () => {
-        const fuz = new Fuzzy({})
+        const fuz = new Fuzzy()
         expect(fuz.render('my awesome text', [{ from: 0, to: 14 }]))
             .to.equal('my awesome text')
     });
@@ -22,12 +22,17 @@ describe('render test', () => {
         const fuz = new Fuzzy({ pre: '<b style="color: brown">', post: '</b>' })
         expect(fuz.render('target is <p>100% of coverage</p>', [{ from: 10, to: 11 }, { from: 15, to: 18 }]))
             .to.equal('target is <b style="color: brown"><p</b>>10<b style="color: brown">0% o</b>f coverage</p>')
+    });
+    it('escape all html char', () => {
+        const fuz = new Fuzzy();
+        expect(fuz.render('<p style="color: brown">&#10 </p>', [{ from: 0, to: 32 }], { escapeHTML: true }))
+            .to.equal('&lt;p style=&quot;color: brown&quot;&gt;&amp;#10 &lt;/p&gt;')
     })
 })
 
 describe('perfect match test', () => {
     it('default conf', () => {
-        const fuz = new Fuzzy({})
+        const fuz = new Fuzzy()
         expect(fuz.match('my awesome text', 'my awesome text'))
             .to.deep.equal({
             original: 'my awesome text',
@@ -36,7 +41,7 @@ describe('perfect match test', () => {
         } as FuzzyResult);
     });
     it('default conf with html text', () => {
-        const fuz = new Fuzzy({})
+        const fuz = new Fuzzy()
         expect(fuz.match('<p>target is 100% of coverage</p>', '<p>target is 100% of coverage</p>'))
             .to.deep.equal({
             original: '<p>target is 100% of coverage</p>',
@@ -55,7 +60,7 @@ describe('perfect match test', () => {
         } as FuzzyResult)
     });
     it('case insensitive', () => {
-        const fuz = new Fuzzy({})
+        const fuz = new Fuzzy()
         expect(fuz.match('This Is So Cool', 'thIs iS sO cOOl'))
             .to.deep.equal({
             original: 'thIs iS sO cOOl',
@@ -72,7 +77,7 @@ describe('perfect match test', () => {
 
 describe('partial match test', () => {
     it('default conf: prefix match', () => {
-        const fuz = new Fuzzy({})
+        const fuz = new Fuzzy()
         expect(fuz.match('my', 'my awesome text'))
             .to.deep.equal({
             original: 'my awesome text',
@@ -81,7 +86,7 @@ describe('partial match test', () => {
         } as FuzzyResult);
     });
     it('default conf: sub match', () => {
-        const fuz = new Fuzzy({})
+        const fuz = new Fuzzy()
         expect(fuz.match('tex', 'my awesome text'))
             .to.deep.equal({
             original: 'my awesome text',
@@ -90,7 +95,7 @@ describe('partial match test', () => {
         } as FuzzyResult);
     });
     it('default conf: fuzzy match', () => {
-        const fuz = new Fuzzy({})
+        const fuz = new Fuzzy()
         expect(fuz.match('met', 'my awesome text'))
             .to.deep.equal({
             original: 'my awesome text',
@@ -152,7 +157,7 @@ describe('partial match test', () => {
 
 describe('filter test', () => {
     it('empty list', () => {
-        const fuz = new Fuzzy({})
+        const fuz = new Fuzzy()
         expect(fuz.filter('ter', []))
             .to.deep.equal([])
     });
