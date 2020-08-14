@@ -85,16 +85,18 @@ export class Fuzzy {
         this.post = conf.post === undefined ? '' : conf.post;
     }
 
-    filter(pattern: string, list: string[]): FuzzyResult[] {
+    // filter is the method to use to filter a string list
+    // list of result return can be sort if parameter `shouldSort` is set.
+    filter(pattern: string, list: string[], conf?: FuzzyConfiguration): FuzzyResult[] {
         let result = [];
         for (let i = 0; i < list.length; i++) {
-            const matchedText = this.match(pattern, list[i])
+            const matchedText = this.match(pattern, list[i], conf)
             if (matchedText !== null) {
                 matchedText.index = i;
                 result.push(matchedText)
             }
         }
-        if (this.shouldSort) {
+        if (this.shouldSort || conf?.shouldSort) {
             result = result.sort((a, b) => {
                 return b.score - a.score
             })
@@ -103,10 +105,10 @@ export class Fuzzy {
     }
 
     // match will return a result if `pattern` is matching `text`,
-    match(pattern: string, text: string): FuzzyResult | null {
+    match(pattern: string, text: string, conf?: FuzzyConfiguration): FuzzyResult | null {
         let localPattern = pattern
         let localText = text
-        if (!this.caseSensitive) {
+        if (!this.caseSensitive || (conf !== undefined && conf.caseSensitive !== undefined && !conf.caseSensitive)) {
             localPattern = localPattern.toLowerCase()
             localText = localText.toLowerCase()
         }
@@ -118,7 +120,7 @@ export class Fuzzy {
                 rendered: this.render(text, intervals),
                 score: Infinity,
             } as FuzzyResult
-            if (this.includeMatches) {
+            if (this.includeMatches || conf?.includeMatches) {
                 result.intervals = intervals
             }
             return result
@@ -145,16 +147,18 @@ export class Fuzzy {
         }
         const result = {
             original: text,
-            rendered: this.render(text, intervals),
+            rendered: this.render(text, intervals, conf),
             score: score(intervals),
         } as FuzzyResult
-        if (this.includeMatches) {
+        if (this.includeMatches || conf?.includeMatches) {
             result.intervals = intervals
         }
         return result;
     }
 
-    render(text: string, intervals: FuzzyMatchingInterval[]): string {
+    // render will modify the text according to the different parameter set in the conf.
+    // If nothing is set, then it will return the text not modified.
+    render(text: string, intervals: FuzzyMatchingInterval[], conf?: FuzzyConfiguration): string {
         let rendered = ''
         for (let i = 0; i < intervals.length; i++) {
             const currentInterval = intervals[i]
@@ -167,23 +171,25 @@ export class Fuzzy {
             }
             let previousStr = ''
             if (previousNotMatchingInterval !== null) {
-                previousStr = this.extractSubString(text, previousNotMatchingInterval)
+                previousStr = this.extractSubString(text, previousNotMatchingInterval, conf)
             }
-            const currentStr = this.extractSubString(text, currentInterval)
-            rendered = rendered + previousStr + this.pre + currentStr + this.post
+            const currentStr = this.extractSubString(text, currentInterval, conf)
+            const pre = conf?.pre ? conf.pre : this.pre
+            const post = conf?.post ? conf.post : this.post
+            rendered = rendered + previousStr + pre + currentStr + post
         }
 
         // check if the last interval contains the end of the string. Otherwise add it
         const lastInterval = intervals[intervals.length - 1]
         if (lastInterval.to < text.length - 1) {
-            rendered = rendered + this.extractSubString(text, { from: lastInterval.to + 1, to: text.length })
+            rendered = rendered + this.extractSubString(text, { from: lastInterval.to + 1, to: text.length }, conf)
         }
         return rendered
     }
 
-    private extractSubString(text: string, interval: FuzzyMatchingInterval) {
+    private extractSubString(text: string, interval: FuzzyMatchingInterval, conf?: FuzzyConfiguration) {
         let str = text.substr(interval.from, interval.to - interval.from + 1)
-        if (this.escapeHTML) {
+        if (this.escapeHTML || conf?.escapeHTML) {
             str = escapeHTML(str)
         }
         return str
