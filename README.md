@@ -53,12 +53,30 @@ const list = ['lion', 'goat', 'mouse', 'dragon']
 
 console.log(fuz.filter('li', list))
 // [
-//   {rendered: '<b>li</b>on', index: 0, score: 4, original: 'lion', intervales:[{from:0, to:2}]},
+//   {rendered: 'lion', index: 0, score: 4, original: 'lion', intervales:[{from:0, to:2}]},
+// ]
+//
+```
+
+4. Override locally the global configuration
+
+```typescript
+import Fuzzy from '@nexucis/fuzzy'
+
+const fuz = new Fuzzy({includeMatches: true})
+const list = ['lion', 'goat', 'mouse', 'dragon']
+
+console.log(fuz.filter('li', list), {includeMatches: false})
+// [
+//   {rendered: 'lion', index: 0, score: 4, original: 'lion'},
 // ]
 //
 ```
 
 ## Available Options
+
+**Note**: each option can be passed to the constructor or/and in each method exposed. 
+The options passed in the method take precedence over the one passed in the contructor.
 
 ### caseSensitive
 
