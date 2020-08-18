@@ -118,7 +118,7 @@ export class Fuzzy {
         }
         // in case it's a perfect match, no need to loop to find which char is matching
         if (localPattern === localText) {
-            const intervals = [{from: 0, to: pattern.length - 1}]
+            const intervals = [{ from: 0, to: pattern.length - 1 }]
             const result = {
                 original: text,
                 rendered: this.render(text, intervals, conf),
@@ -134,7 +134,7 @@ export class Fuzzy {
         const intervals = [];
         for (let i = 0; i < localText.length && patternIdx < localPattern.length;) {
             if (localText[i] === localPattern[patternIdx]) {
-                const interval = {from: i, to: i}
+                const interval = { from: i, to: i }
                 patternIdx++;
                 i++;
                 for (let j = i; j < localText.length && patternIdx < localPattern.length && localText[j] === localPattern[patternIdx]; j++) {
@@ -170,10 +170,10 @@ export class Fuzzy {
             const currentInterval = intervals[i]
             let previousNotMatchingInterval = null;
             if (i === 0 && currentInterval.from !== 0) {
-                previousNotMatchingInterval = {from: 0, to: currentInterval.from - 1}
+                previousNotMatchingInterval = { from: 0, to: currentInterval.from - 1 }
             }
             if (i > 0) {
-                previousNotMatchingInterval = {from: intervals[i - 1].to + 1, to: currentInterval.from - 1}
+                previousNotMatchingInterval = { from: intervals[i - 1].to + 1, to: currentInterval.from - 1 }
             }
             let previousStr = ''
             if (previousNotMatchingInterval !== null) {
@@ -186,7 +186,7 @@ export class Fuzzy {
         // check if the last interval contains the end of the string. Otherwise add it
         const lastInterval = intervals[intervals.length - 1]
         if (lastInterval.to < text.length - 1) {
-            rendered = rendered + this.extractSubString(text, {from: lastInterval.to + 1, to: text.length}, conf)
+            rendered = rendered + this.extractSubString(text, { from: lastInterval.to + 1, to: text.length }, conf)
         }
         return rendered
     }
