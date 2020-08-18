@@ -37,10 +37,28 @@ function escapeHTML(text: string): string {
     });
 }
 
-function score(intervals: FuzzyMatchingInterval[]): number {
+// score should be used to calculate the score based on the intervals created during the matching step.
+// Here is how the score is determinated:
+//   1. Consecutive characters should increase the score more than linearly
+//   2. More there is a distance between the characters, higher it reduces the score
+//      For example, for the pattern 'abc', the following string are sorted by the highest score
+//      abcdef > defabc > abec > defabec
+// Note: this function is exported only for testing purpose.
+export function score(intervals: FuzzyMatchingInterval[], strLength: number): number {
     let result = 0;
-    for (const interval of intervals) {
-        result = result + (interval.to - interval.from + 1) ** 2
+    for (let i = 0; i < intervals.length; i++) {
+        const currentInterval = intervals[i]
+        let previousNotMatchingInterval = null;
+        if (i === 0 && currentInterval.from !== 0) {
+            previousNotMatchingInterval = { from: 0, to: currentInterval.from - 1 }
+        }
+        if (i > 0) {
+            previousNotMatchingInterval = { from: intervals[i - 1].to + 1, to: currentInterval.from - 1 }
+        }
+        if (previousNotMatchingInterval !== null) {
+            result = result - (previousNotMatchingInterval.to - previousNotMatchingInterval.from + 1) / strLength
+        }
+        result = result + (currentInterval.to - currentInterval.from + 1) ** 2
     }
     return result
 }
@@ -152,7 +170,7 @@ export class Fuzzy {
         const result = {
             original: text,
             rendered: this.render(text, intervals, conf),
-            score: score(intervals),
+            score: score(intervals, text.length),
         } as FuzzyResult
         if (includeMatches) {
             result.intervals = intervals

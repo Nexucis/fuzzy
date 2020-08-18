@@ -1,6 +1,24 @@
-import { Fuzzy, FuzzyResult } from './index';
+import { Fuzzy, FuzzyResult, score } from './index';
 import { expect } from 'chai';
 import 'mocha';
+
+describe('scoring test', () => {
+    it('prefix match is a perfect uint score', () => {
+        expect(score([{ from: 0, to: 4 }], 5))
+            .to.equal(25)
+    });
+    it('prefix match is higher than suffix match', () => {
+        expect(score([{ from: 0, to: 2 }], 5) > score([{ from: 2, to: 4 }], 5))
+            .to.equal(true)
+    });
+    it('Consecutive characters have a higher score than distant characters', () => {
+        expect(
+            score([{ from: 1, to: 2 }, { from: 5, to: 5 }], 6)
+            >
+            score([{ from: 0, to: 0 }, { from: 2, to: 2 }, { from: 4, to: 4 }], 6))
+            .to.equal(true)
+    })
+})
 
 describe('render test with global conf', () => {
     it('default conf: shouldn t alter the string', () => {
@@ -142,7 +160,7 @@ describe('perfect match test with local conf', () => {
     })
 })
 
-describe('partial match test', () => {
+describe('partial match test: global conf', () => {
     it('default conf: prefix match', () => {
         const fuz = new Fuzzy()
         expect(fuz.match('my', 'my awesome text'))
@@ -158,7 +176,7 @@ describe('partial match test', () => {
             .to.deep.equal({
             original: 'my awesome text',
             rendered: 'my awesome text',
-            score: 9,
+            score: 8.266666666666667,
         } as FuzzyResult);
     });
     it('default conf: fuzzy match', () => {
@@ -167,7 +185,7 @@ describe('partial match test', () => {
             .to.deep.equal({
             original: 'my awesome text',
             rendered: 'my awesome text',
-            score: 3,
+            score: 2.4000000000000004,
         } as FuzzyResult);
     });
     it('rendering conf: fuzzy match', () => {
@@ -176,7 +194,7 @@ describe('partial match test', () => {
             .to.deep.equal({
             original: 'my awesome text',
             rendered: '<b>m</b>y aw<b>e</b>some <b>t</b>ext',
-            score: 3,
+            score: 2.4000000000000004,
             intervals: [
                 {
                     from: 0,
@@ -217,7 +235,60 @@ describe('partial match test', () => {
                     to: 35,
                 },
             ],
-            score: 60,
+            score: 59.38461538461539,
+        } as FuzzyResult)
+    })
+})
+
+describe('partial match test: local conf', () => {
+    it('rendering conf: fuzzy match', () => {
+        const fuz = new Fuzzy()
+        expect(fuz.match('met', 'my awesome text', { pre: '<b>', post: '</b>', includeMatches: true }))
+            .to.deep.equal({
+            original: 'my awesome text',
+            rendered: '<b>m</b>y aw<b>e</b>some <b>t</b>ext',
+            score: 2.4000000000000004,
+            intervals: [
+                {
+                    from: 0,
+                    to: 0,
+                },
+                {
+                    from: 5,
+                    to: 5,
+                },
+                {
+                    from: 11,
+                    to: 11,
+                },
+            ],
+        } as FuzzyResult);
+    });
+    it('include matches: fuzzy match with continuous string', () => {
+        const fuz = new Fuzzy()
+        expect(fuz.match('<inisbe usel', '<input> my input Is Close To be useless', { includeMatches: true }))
+            .to.deep.equal({
+            original: '<input> my input Is Close To be useless',
+            rendered: '<input> my input Is Close To be useless',
+            intervals: [
+                {
+                    from: 0,
+                    to: 2,
+                },
+                {
+                    from: 11,
+                    to: 11,
+                },
+                {
+                    from: 18,
+                    to: 18,
+                },
+                {
+                    from: 29,
+                    to: 35,
+                },
+            ],
+            score: 59.38461538461539,
         } as FuzzyResult)
     })
 })
@@ -237,13 +308,13 @@ describe('filter test, global conf', () => {
                     index: 3,
                     original: 'trust me I now what I am doing',
                     rendered: 'trust me I now what I am doing',
-                    score: 2,
+                    score: 1.4666666666666668,
                 },
                 {
                     index: 4,
                     original: 'goat',
                     rendered: 'goat',
-                    score: 4,
+                    score: 3.75,
                 },
             ]
         )
@@ -258,13 +329,13 @@ describe('filter test, global conf', () => {
                     index: 1,
                     original: 'goat',
                     rendered: 'goat',
-                    score: 4,
+                    score: 3.75,
                 },
                 {
                     index: 4,
                     original: 'trust me I now what I am doing',
                     rendered: 'trust me I now what I am doing',
-                    score: 2,
+                    score: 1.4666666666666668,
                 },
             ]
         )
@@ -282,13 +353,13 @@ describe('filter test, local conf', () => {
                     index: 1,
                     original: 'goat',
                     rendered: 'goat',
-                    score: 4,
+                    score: 3.75,
                 },
                 {
                     index: 4,
                     original: 'trust me I now what I am doing',
                     rendered: 'trust me I now what I am doing',
-                    score: 2,
+                    score: 1.4666666666666668,
                 },
             ]
         )
