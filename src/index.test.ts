@@ -185,7 +185,7 @@ describe('partial match test: global conf', () => {
             .to.deep.equal({
             original: 'my awesome text',
             rendered: 'my awesome text',
-            score: 2.4000000000000004,
+            score: 4.4,
         } as FuzzyResult);
     });
     it('rendering conf: fuzzy match', () => {
@@ -193,16 +193,12 @@ describe('partial match test: global conf', () => {
         expect(fuz.match('met', 'my awesome text'))
             .to.deep.equal({
             original: 'my awesome text',
-            rendered: '<b>m</b>y aw<b>e</b>some <b>t</b>ext',
-            score: 2.4000000000000004,
+            rendered: 'my aweso<b>me</b> <b>t</b>ext',
+            score: 4.4,
             intervals: [
                 {
-                    from: 0,
-                    to: 0,
-                },
-                {
-                    from: 5,
-                    to: 5,
+                    from: 8,
+                    to: 9,
                 },
                 {
                     from: 11,
@@ -246,16 +242,12 @@ describe('partial match test: local conf', () => {
         expect(fuz.match('met', 'my awesome text', { pre: '<b>', post: '</b>', includeMatches: true }))
             .to.deep.equal({
             original: 'my awesome text',
-            rendered: '<b>m</b>y aw<b>e</b>some <b>t</b>ext',
-            score: 2.4000000000000004,
+            rendered: 'my aweso<b>me</b> <b>t</b>ext',
+            score: 4.4,
             intervals: [
                 {
-                    from: 0,
-                    to: 0,
-                },
-                {
-                    from: 5,
-                    to: 5,
+                    from: 8,
+                    to: 9,
                 },
                 {
                     from: 11,
@@ -290,6 +282,24 @@ describe('partial match test: local conf', () => {
             ],
             score: 59.38461538461539,
         } as FuzzyResult)
+    })
+})
+
+describe('matching test', () => {
+    it('pattern matched better at the end of the text', () => {
+        const fuz = new Fuzzy()
+        expect(fuz.match('bac', 'babac', { pre: '<', post: '>' })?.rendered)
+            .to.equal('ba<bac>')
+    });
+    it('pattern has always higher score when it s a prefix', () => {
+        const fuz = new Fuzzy()
+        expect(fuz.match('bac', 'bacbac', { pre: '<', post: '>' })?.rendered)
+            .to.equal('<bac>bac')
+    });
+    it('pattern with duplicated char', () => {
+        const fuz = new Fuzzy()
+        expect(fuz.match('cccceer', 'cecccesdceer', { pre: '<', post: '>' })?.rendered)
+            .to.equal('ce<ccc>esd<ceer>')
     })
 })
 

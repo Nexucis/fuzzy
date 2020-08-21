@@ -37,6 +37,10 @@ function escapeHTML(text: string): string {
     });
 }
 
+function intervalSize(interval: FuzzyMatchingInterval): number {
+    return interval.to - interval.from + 1
+}
+
 // score should be used to calculate the score based on the intervals created during the matching step.
 // Here is how the score is determinated:
 //   1. Consecutive characters should increase the score more than linearly
@@ -56,11 +60,35 @@ export function score(intervals: FuzzyMatchingInterval[], strLength: number): nu
             previousNotMatchingInterval = { from: intervals[i - 1].to + 1, to: currentInterval.from - 1 }
         }
         if (previousNotMatchingInterval !== null) {
-            result = result - (previousNotMatchingInterval.to - previousNotMatchingInterval.from + 1) / strLength
+            result = result - intervalSize(previousNotMatchingInterval) / strLength
         }
-        result = result + (currentInterval.to - currentInterval.from + 1) ** 2
+        result = result + intervalSize(currentInterval) ** 2
     }
     return result
+}
+
+// generateMatchingInterval will iterate other the given text to find the different char that matched the given pattern
+function generateMatchingInterval(pattern: string, text: string, idxText: number): null | { score: number; intervals: FuzzyMatchingInterval[] } {
+    let patternIdx = 0;
+    const intervals = [];
+    for (let i = idxText; i < text.length && patternIdx < pattern.length;) {
+        if (text[i] === pattern[patternIdx]) {
+            const interval = { from: i, to: i }
+            patternIdx++;
+            i++;
+            for (let j = i; j < text.length && patternIdx < pattern.length && text[j] === pattern[patternIdx]; j++) {
+                interval.to = j
+                patternIdx++
+                i = j
+            }
+            intervals.push(interval)
+        }
+        i++;
+    }
+    if (intervals.length === 0 || patternIdx !== pattern.length) {
+        return null;
+    }
+    return { score: score(intervals, text.length), intervals: intervals }
 }
 
 export interface FuzzyConfiguration {
@@ -148,29 +176,32 @@ export class Fuzzy {
             return result
         }
         // otherwise let's calculate the different indices that will then be used to calculate the score
-        let patternIdx = 0;
-        const intervals = [];
-        for (let i = 0; i < localText.length && patternIdx < localPattern.length;) {
-            if (localText[i] === localPattern[patternIdx]) {
-                const interval = { from: i, to: i }
-                patternIdx++;
-                i++;
-                for (let j = i; j < localText.length && patternIdx < localPattern.length && localText[j] === localPattern[patternIdx]; j++) {
-                    interval.to = j
-                    patternIdx++
-                    i = j
+        let intervals: FuzzyMatchingInterval[] = [];
+        let score = 0
+        for (let i = 0; i < localText.length - localPattern.length +1; i++) {
+            // Each time a char is matching the first char of the pattern
+            // loop other the rest of the text to generate the different matching interval.
+            // Like that we will be able to find the best matching possibility.
+            // For example: given the pattern `bac` and the text `babac`
+            // instead of matching `<ba>ba<c>, it will match ba<bac> which has a better score than the previous one.
+            if (localText[i] === localPattern[0]) {
+                const matchingResult = generateMatchingInterval(localPattern, localText, i);
+                if (matchingResult === null) {
+                    break
                 }
-                intervals.push(interval)
+                if (matchingResult.score > score) {
+                    score = matchingResult.score
+                    intervals = matchingResult.intervals
+                }
             }
-            i++;
         }
-        if (intervals.length === 0 || patternIdx !== localPattern.length) {
+        if (intervals.length === 0) {
             return null;
         }
         const result = {
             original: text,
             rendered: this.render(text, intervals, conf),
-            score: score(intervals, text.length),
+            score: score,
         } as FuzzyResult
         if (includeMatches) {
             result.intervals = intervals
@@ -211,7 +242,7 @@ export class Fuzzy {
 
     private extractSubString(text: string, interval: FuzzyMatchingInterval, conf?: FuzzyConfiguration) {
         const shouldEscape = conf?.escapeHTML !== undefined ? conf.escapeHTML : this.escapeHTML;
-        let str = text.substr(interval.from, interval.to - interval.from + 1)
+        let str = text.substr(interval.from, intervalSize(interval))
         if (shouldEscape) {
             str = escapeHTML(str)
         }
