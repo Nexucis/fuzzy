@@ -1,4 +1,4 @@
-import { Fuzzy, FuzzyResult, score } from './index';
+import { filter, Fuzzy, match, render, score } from './index';
 import { expect } from 'chai';
 import 'mocha';
 
@@ -20,300 +20,289 @@ describe('scoring test', () => {
     })
 })
 
-describe('render test with global conf', () => {
-    it('default conf: shouldn t alter the string', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.render('my awesome text', [{ from: 0, to: 14 }]))
-            .to.equal('my awesome text')
-    });
-    it('conf used to enable the rendering, full match', () => {
-        const fuz = new Fuzzy({ escapeHTML: true, pre: '<b style="color: brown">', post: '</b>' })
-        expect(fuz.render('<p>target is 100% of coverage</p>', [{ from: 0, to: 32 }]))
-            .to.equal('<b style="color: brown">&lt;p&gt;target is 100% of coverage&lt;/p&gt;</b>')
-    });
-    it('conf used to enable the rendering with escape html, partial match', () => {
-        const fuz = new Fuzzy({ escapeHTML: true, pre: '<b style="color: brown">', post: '</b>' })
-        expect(fuz.render('target is <p>100% of coverage</p>', [{ from: 10, to: 11 }, { from: 15, to: 18 }]))
-            .to.equal('target is <b style="color: brown">&lt;p</b>&gt;10<b style="color: brown">0% o</b>f coverage&lt;/p&gt;')
-    });
-    it('conf used to enable rendering without escape html, partial match', () => {
-        const fuz = new Fuzzy({ pre: '<b style="color: brown">', post: '</b>' })
-        expect(fuz.render('target is <p>100% of coverage</p>', [{ from: 10, to: 11 }, { from: 15, to: 18 }]))
-            .to.equal('target is <b style="color: brown"><p</b>>10<b style="color: brown">0% o</b>f coverage</p>')
-    });
-    it('escape all html char', () => {
-        const fuz = new Fuzzy({ escapeHTML: true });
-        expect(fuz.render('<p style="color: brown">&#10 </p>', [{ from: 0, to: 32 }]))
-            .to.equal('&lt;p style=&quot;color: brown&quot;&gt;&amp;#10 &lt;/p&gt;')
-    })
-})
-
-describe('render test with local conf', () => {
-    it('conf used to enable the rendering, full match', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.render('<p>target is 100% of coverage</p>', [{ from: 0, to: 32 }], {
-            escapeHTML: true,
-            pre: '<b style="color: brown">',
-            post: '</b>',
-        }))
-            .to.equal('<b style="color: brown">&lt;p&gt;target is 100% of coverage&lt;/p&gt;</b>')
-    });
-    it('conf used to enable the rendering with escape html, partial match', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.render('target is <p>100% of coverage</p>', [
-            { from: 10, to: 11 },
-            { from: 15, to: 18 },
-        ], {
-            escapeHTML: true, pre: '<b style="color: brown">', post: '</b>',
-        }))
-            .to.equal('target is <b style="color: brown">&lt;p</b>&gt;10<b style="color: brown">0% o</b>f coverage&lt;/p&gt;')
-    });
-    it('conf used to enable rendering without escape html, partial match', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.render('target is <p>100% of coverage</p>', [
-            { from: 10, to: 11 },
-            { from: 15, to: 18 },
-        ], { pre: '<b style="color: brown">', post: '</b>' }))
-            .to.equal('target is <b style="color: brown"><p</b>>10<b style="color: brown">0% o</b>f coverage</p>')
-    });
-    it('escape all html char', () => {
-        const fuz = new Fuzzy();
-        expect(fuz.render('<p style="color: brown">&#10 </p>', [{ from: 0, to: 32 }], { escapeHTML: true }))
-            .to.equal('&lt;p style=&quot;color: brown&quot;&gt;&amp;#10 &lt;/p&gt;')
-    })
-})
-
-describe('perfect match test with global conf', () => {
-    it('default conf', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('my awesome text', 'my awesome text'))
-            .to.deep.equal({
-            original: 'my awesome text',
-            rendered: 'my awesome text',
-            score: Infinity,
-        } as FuzzyResult);
-    });
-    it('default conf with html text', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('<p>target is 100% of coverage</p>', '<p>target is 100% of coverage</p>'))
-            .to.deep.equal({
-            original: '<p>target is 100% of coverage</p>',
-            rendered: '<p>target is 100% of coverage</p>',
-            score: Infinity,
-        } as FuzzyResult)
-    });
-    it('conf used to enable the rendering', () => {
-        const fuz = new Fuzzy({ escapeHTML: true, includeMatches: true, pre: '<b style="color: brown">', post: '</b>' })
-        expect(fuz.match('<p>target is 100% of coverage</p>', '<p>target is 100% of coverage</p>'))
-            .to.deep.equal({
-            original: '<p>target is 100% of coverage</p>',
-            rendered: '<b style="color: brown">&lt;p&gt;target is 100% of coverage&lt;/p&gt;</b>',
-            score: Infinity,
+describe('render test', () => {
+    const testSuite = [
+        {
+            title: 'default conf: shouldn t alter the string',
+            text: 'my awesome text',
+            intervals: [{ from: 0, to: 14 }],
+            result: 'my awesome text',
+        },
+        {
+            title: 'conf used to enable the rendering, full match',
+            text: '<p>target is 100% of coverage</p>',
             intervals: [{ from: 0, to: 32 }],
-        } as FuzzyResult)
-    });
-    it('case insensitive', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('This Is So Cool', 'thIs iS sO cOOl'))
-            .to.deep.equal({
-            original: 'thIs iS sO cOOl',
-            rendered: 'thIs iS sO cOOl',
-            score: Infinity,
-        } as FuzzyResult)
-    })
-    it('case sensitive', () => {
-        const fuz = new Fuzzy({ caseSensitive: true })
-        expect(fuz.match('This Is So Cool', 'thIs iS sO cOOl'))
-            .to.equal(null)
-    })
-})
-
-describe('perfect match test with local conf', () => {
-    it('conf used to enable the rendering', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('<p>target is 100% of coverage</p>', '<p>target is 100% of coverage</p>', {
-            escapeHTML: true,
-            includeMatches: true,
-            pre: '<b style="color: brown">',
-            post: '</b>',
-        }))
-            .to.deep.equal({
-            original: '<p>target is 100% of coverage</p>',
-            rendered: '<b style="color: brown">&lt;p&gt;target is 100% of coverage&lt;/p&gt;</b>',
-            score: Infinity,
+            config: {
+                escapeHTML: true,
+                pre: '<b style="color: brown">',
+                post: '</b>',
+            },
+            result: '<b style="color: brown">&lt;p&gt;target is 100% of coverage&lt;/p&gt;</b>',
+        },
+        {
+            title: 'conf used to enable the rendering with escape html, partial match',
+            text: 'target is <p>100% of coverage</p>',
+            intervals: [
+                { from: 10, to: 11 },
+                { from: 15, to: 18 },
+            ],
+            config: {
+                escapeHTML: true, pre: '<b style="color: brown">', post: '</b>',
+            },
+            result: 'target is <b style="color: brown">&lt;p</b>&gt;10<b style="color: brown">0% o</b>f coverage&lt;/p&gt;',
+        },
+        {
+            title: 'conf used to enable rendering without escape html, partial match',
+            text: 'target is <p>100% of coverage</p>',
+            intervals: [
+                { from: 10, to: 11 },
+                { from: 15, to: 18 },
+            ],
+            config: { pre: '<b style="color: brown">', post: '</b>' },
+            result: 'target is <b style="color: brown"><p</b>>10<b style="color: brown">0% o</b>f coverage</p>',
+        },
+        {
+            title: 'escape all html char',
+            text: '<p style="color: brown">&#10 </p>',
             intervals: [{ from: 0, to: 32 }],
-        } as FuzzyResult)
-    });
-    it('case insensitive', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('This Is So Cool', 'thIs iS sO cOOl'))
-            .to.deep.equal({
-            original: 'thIs iS sO cOOl',
-            rendered: 'thIs iS sO cOOl',
-            score: Infinity,
-        } as FuzzyResult)
-    })
-    it('case sensitive', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('This Is So Cool', 'thIs iS sO cOOl', { caseSensitive: true }))
-            .to.equal(null)
-    })
+            config: { escapeHTML: true },
+            result: '&lt;p style=&quot;color: brown&quot;&gt;&amp;#10 &lt;/p&gt;',
+        },
+    ]
+    for (const test of testSuite) {
+        it(test.title, () => {
+            const fuzWithGlobalConf = new Fuzzy(test.config)
+            const fuzWithLocalConf = new Fuzzy()
+            expect(fuzWithGlobalConf.render(test.text, test.intervals))
+                .to.equal(test.result)
+            expect(fuzWithLocalConf.render(test.text, test.intervals, test.config))
+                .to.equal(test.result)
+            expect(render(test.text, test.intervals, test.config))
+                .to.equal(test.result)
+        })
+    }
 })
 
-describe('partial match test: global conf', () => {
-    it('default conf: prefix match', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('my', 'my awesome text'))
-            .to.deep.equal({
-            original: 'my awesome text',
-            rendered: 'my awesome text',
-            score: 4,
-        } as FuzzyResult);
-    });
-    it('default conf: sub match', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('tex', 'my awesome text'))
-            .to.deep.equal({
-            original: 'my awesome text',
-            rendered: 'my awesome text',
-            score: 8.266666666666667,
-        } as FuzzyResult);
-    });
-    it('default conf: fuzzy match', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('met', 'my awesome text'))
-            .to.deep.equal({
-            original: 'my awesome text',
-            rendered: 'my awesome text',
-            score: 4.4,
-        } as FuzzyResult);
-    });
-    it('rendering conf: fuzzy match', () => {
-        const fuz = new Fuzzy({ pre: '<b>', post: '</b>', includeMatches: true })
-        expect(fuz.match('met', 'my awesome text'))
-            .to.deep.equal({
-            original: 'my awesome text',
-            rendered: 'my aweso<b>me</b> <b>t</b>ext',
-            score: 4.4,
-            intervals: [
-                {
-                    from: 8,
-                    to: 9,
-                },
-                {
-                    from: 11,
-                    to: 11,
-                },
-            ],
-        } as FuzzyResult);
-    });
-    it('include matches: fuzzy match with continuous string', () => {
-        const fuz = new Fuzzy({ includeMatches: true })
-        expect(fuz.match('<inisbe usel', '<input> my input Is Close To be useless'))
-            .to.deep.equal({
-            original: '<input> my input Is Close To be useless',
-            rendered: '<input> my input Is Close To be useless',
-            intervals: [
-                {
-                    from: 0,
-                    to: 2,
-                },
-                {
-                    from: 11,
-                    to: 11,
-                },
-                {
-                    from: 18,
-                    to: 18,
-                },
-                {
-                    from: 29,
-                    to: 35,
-                },
-            ],
-            score: 59.38461538461539,
-        } as FuzzyResult)
-    })
+describe('perfect match test', () => {
+    const testSuite = [
+        {
+            title: 'default conf',
+            pattern: 'my awesome text',
+            text: 'my awesome text',
+            result: {
+                original: 'my awesome text',
+                rendered: 'my awesome text',
+                score: Infinity,
+            },
+        },
+        {
+            title: 'default conf with html text',
+            pattern: '<p>target is 100% of coverage</p>',
+            text: '<p>target is 100% of coverage</p>',
+            result: {
+                original: '<p>target is 100% of coverage</p>',
+                rendered: '<p>target is 100% of coverage</p>',
+                score: Infinity,
+            },
+        },
+        {
+            title: 'conf used to enable the rendering',
+            pattern: '<p>target is 100% of coverage</p>',
+            text: '<p>target is 100% of coverage</p>',
+            config: {
+                escapeHTML: true, includeMatches: true, pre: '<b style="color: brown">', post: '</b>',
+            },
+            result: {
+                original: '<p>target is 100% of coverage</p>',
+                rendered: '<b style="color: brown">&lt;p&gt;target is 100% of coverage&lt;/p&gt;</b>',
+                score: Infinity,
+                intervals: [{ from: 0, to: 32 }],
+            },
+        },
+        {
+            title: 'case insensitive',
+            pattern: 'This Is So Cool',
+            text: 'thIs iS sO cOOl',
+            config: {
+                caseSensitive: false,
+            },
+            result: {
+                original: 'thIs iS sO cOOl',
+                rendered: 'thIs iS sO cOOl',
+                score: Infinity,
+            },
+        },
+        {
+            title: 'case sensitive',
+            pattern: 'This Is So Cool',
+            text: 'thIs iS sO cOOl',
+            config: {
+                caseSensitive: true,
+            },
+            result: null,
+        },
+    ]
+    for (const test of testSuite) {
+        it(test.title, () => {
+            const fuzWithGlobalConf = new Fuzzy(test.config)
+            const fuzWithLocalConf = new Fuzzy()
+            expect(fuzWithGlobalConf.match(test.pattern, test.text))
+                .to.deep.equal(test.result)
+            expect(fuzWithLocalConf.match(test.pattern, test.text, test.config))
+                .to.deep.equal(test.result)
+            expect(match(test.pattern, test.text, test.config))
+                .to.deep.equal(test.result)
+        })
+    }
 })
 
-describe('partial match test: local conf', () => {
-    it('rendering conf: fuzzy match', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('met', 'my awesome text', { pre: '<b>', post: '</b>', includeMatches: true }))
-            .to.deep.equal({
-            original: 'my awesome text',
-            rendered: 'my aweso<b>me</b> <b>t</b>ext',
-            score: 4.4,
-            intervals: [
-                {
-                    from: 8,
-                    to: 9,
-                },
-                {
-                    from: 11,
-                    to: 11,
-                },
-            ],
-        } as FuzzyResult);
-    });
-    it('include matches: fuzzy match with continuous string', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('<inisbe usel', '<input> my input Is Close To be useless', { includeMatches: true }))
-            .to.deep.equal({
-            original: '<input> my input Is Close To be useless',
-            rendered: '<input> my input Is Close To be useless',
-            intervals: [
-                {
-                    from: 0,
-                    to: 2,
-                },
-                {
-                    from: 11,
-                    to: 11,
-                },
-                {
-                    from: 18,
-                    to: 18,
-                },
-                {
-                    from: 29,
-                    to: 35,
-                },
-            ],
-            score: 59.38461538461539,
-        } as FuzzyResult)
-    })
+describe('partial match test', () => {
+    const testSuite = [
+        {
+            title: 'default conf: prefix match',
+            pattern: 'my',
+            text: 'my awesome text',
+            result: {
+                original: 'my awesome text',
+                rendered: 'my awesome text',
+                score: 4,
+            },
+        },
+        {
+            title: 'default conf: sub match',
+            pattern: 'tex',
+            text: 'my awesome text',
+            result: {
+                original: 'my awesome text',
+                rendered: 'my awesome text',
+                score: 8.266666666666667,
+            },
+        },
+        {
+            title: 'default conf: fuzzy match',
+            pattern: 'met',
+            text: 'my awesome text',
+            result: {
+                original: 'my awesome text',
+                rendered: 'my awesome text',
+                score: 4.4,
+            },
+        },
+        {
+            title: 'rendering conf: fuzzy match',
+            pattern: 'met',
+            text: 'my awesome text',
+            config: {
+                pre: '<b>', post: '</b>', includeMatches: true,
+            },
+            result: {
+                original: 'my awesome text',
+                rendered: 'my aweso<b>me</b> <b>t</b>ext',
+                score: 4.4,
+                intervals: [
+                    {
+                        from: 8,
+                        to: 9,
+                    },
+                    {
+                        from: 11,
+                        to: 11,
+                    },
+                ],
+            },
+        },
+        {
+            title: 'include matches: fuzzy match with continuous string',
+            pattern: '<inisbe usel',
+            text: '<input> my input Is Close To be useless',
+            config: { includeMatches: true },
+            result: {
+                original: '<input> my input Is Close To be useless',
+                rendered: '<input> my input Is Close To be useless',
+                intervals: [
+                    {
+                        from: 0,
+                        to: 2,
+                    },
+                    {
+                        from: 11,
+                        to: 11,
+                    },
+                    {
+                        from: 18,
+                        to: 18,
+                    },
+                    {
+                        from: 29,
+                        to: 35,
+                    },
+                ],
+                score: 59.38461538461539,
+            },
+        },
+    ]
+    for (const test of testSuite) {
+        it(test.title, () => {
+            const fuzWithGlobalConf = new Fuzzy(test.config)
+            const fuzWithLocalConf = new Fuzzy()
+            expect(fuzWithGlobalConf.match(test.pattern, test.text))
+                .to.deep.equal(test.result)
+            expect(fuzWithLocalConf.match(test.pattern, test.text, test.config))
+                .to.deep.equal(test.result)
+            expect(match(test.pattern, test.text, test.config))
+                .to.deep.equal(test.result)
+        });
+    }
 })
 
-describe('matching test', () => {
-    it('pattern matched better at the end of the text', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('bac', 'babac', { pre: '<', post: '>' })?.rendered)
-            .to.equal('ba<bac>')
-    });
-    it('pattern has always higher score when it s a prefix', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('bac', 'bacbac', { pre: '<', post: '>' })?.rendered)
-            .to.equal('<bac>bac')
-    });
-    it('pattern with duplicated char', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.match('cccceer', 'cecccesdceer', { pre: '<', post: '>' })?.rendered)
-            .to.equal('ce<ccc>esd<ceer>')
-    })
+describe('matching test with rendering', () => {
+    const testSuite = [
+        {
+            title: 'pattern matched better at the end of the text',
+            pattern: 'bac',
+            text: 'babac',
+            config: { pre: '<', post: '>' },
+            result: 'ba<bac>',
+        },
+        {
+            title: 'pattern has always higher score when it s a prefix',
+            pattern: 'bac',
+            text: 'bacbac',
+            config: { pre: '<', post: '>' },
+            result: '<bac>bac',
+        },
+        {
+            title: 'pattern with duplicated char',
+            pattern: 'cccceer',
+            text: 'cecccesdceer',
+            config: { pre: '<', post: '>' },
+            result: 'ce<ccc>esd<ceer>',
+        },
+    ]
+    for (const test of testSuite) {
+        it(test.title, () => {
+            const fuzWithGlobalConf = new Fuzzy(test.config)
+            const fuzWithLocalConf = new Fuzzy()
+            expect(fuzWithGlobalConf.match(test.pattern, test.text)?.rendered).to.equal(test.result)
+            expect(fuzWithLocalConf.match(test.pattern, test.text, test.config)?.rendered).to.equal(test.result)
+            expect(match(test.pattern, test.text, test.config)?.rendered).to.equal(test.result)
+        });
+    }
 })
 
 describe('filter test, global conf', () => {
-    it('empty list', () => {
-        const fuz = new Fuzzy()
-        expect(fuz.filter('ter', []))
-            .to.deep.equal([])
-    });
-    it('filter with no rendering', () => {
-        const fuz = new Fuzzy({})
-        const list = ['lion', 'mouse', 'dragon', 'trust me I now what I am doing', 'goat']
-        expect(fuz.filter('oa', list))
-            .to.deep.equal([
+    const testSuite = [
+        {
+            title:'empty list',
+            pattern: 'ter',
+            list: [],
+            result: [],
+        },
+        {
+            title: 'filter with no rendering',
+            pattern: 'oa',
+            list: ['lion', 'mouse', 'dragon', 'trust me I now what I am doing', 'goat'],
+            result: [
                 {
                     index: 3,
                     original: 'trust me I now what I am doing',
@@ -326,15 +315,14 @@ describe('filter test, global conf', () => {
                     rendered: 'goat',
                     score: 3.75,
                 },
-            ]
-        )
-    });
-    it('filter with no rendering, sorted', () => {
-        const fuz = new Fuzzy({ shouldSort: true })
-        const list = ['lion', 'goat', 'mouse', 'dragon', 'trust me I now what I am doing']
-        expect(fuz.filter('oa', list))
-            .to.deep.equal([
-
+            ],
+        },
+        {
+            title: 'filter with no rendering, sorted',
+            pattern: 'oa',
+            list: ['lion', 'goat', 'mouse', 'dragon', 'trust me I now what I am doing'],
+            config: { shouldSort: true },
+            result: [
                 {
                     index: 1,
                     original: 'goat',
@@ -347,31 +335,19 @@ describe('filter test, global conf', () => {
                     rendered: 'trust me I now what I am doing',
                     score: 1.4666666666666668,
                 },
-            ]
-        )
-    })
-})
-
-describe('filter test, local conf', () => {
-    it('filter with no rendering, sorted', () => {
-        const fuz = new Fuzzy()
-        const list = ['lion', 'goat', 'mouse', 'dragon', 'trust me I now what I am doing']
-        expect(fuz.filter('oa', list, { shouldSort: true }))
-            .to.deep.equal([
-
-                {
-                    index: 1,
-                    original: 'goat',
-                    rendered: 'goat',
-                    score: 3.75,
-                },
-                {
-                    index: 4,
-                    original: 'trust me I now what I am doing',
-                    rendered: 'trust me I now what I am doing',
-                    score: 1.4666666666666668,
-                },
-            ]
-        )
-    })
+            ],
+        },
+    ]
+    for (const test of testSuite) {
+        it(test.title, () => {
+            const fuzWithGlobalConf = new Fuzzy(test.config)
+            const fuzWithLocalConf = new Fuzzy()
+            expect(fuzWithGlobalConf.filter(test.pattern, test.list))
+                .to.deep.equal(test.result)
+            expect(fuzWithLocalConf.filter(test.pattern, test.list, test.config))
+                .to.deep.equal(test.result)
+            expect(filter(test.pattern, test.list, test.config))
+                .to.deep.equal(test.result)
+        });
+    }
 })
