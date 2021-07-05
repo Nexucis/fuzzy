@@ -41,6 +41,18 @@ function intervalSize(interval: FuzzyMatchingInterval): number {
     return interval.to - interval.from + 1
 }
 
+function calculatePreviousNotMatchingInterval(intervals: FuzzyMatchingInterval[], idx: number): FuzzyMatchingInterval | null {
+    const currentInterval = intervals[idx]
+    let previousNotMatchingInterval = null;
+    if (idx === 0 && currentInterval.from !== 0) {
+        previousNotMatchingInterval = { from: 0, to: currentInterval.from - 1 }
+    }
+    if (idx > 0) {
+        previousNotMatchingInterval = { from: intervals[idx - 1].to + 1, to: currentInterval.from - 1 }
+    }
+    return previousNotMatchingInterval
+}
+
 // score should be used to calculate the score based on the intervals created during the matching step.
 // Here is how the score is determinated:
 //   1. Consecutive characters should increase the score more than linearly
@@ -52,13 +64,7 @@ export function score(intervals: FuzzyMatchingInterval[], strLength: number): nu
     let result = 0;
     for (let i = 0; i < intervals.length; i++) {
         const currentInterval = intervals[i]
-        let previousNotMatchingInterval = null;
-        if (i === 0 && currentInterval.from !== 0) {
-            previousNotMatchingInterval = { from: 0, to: currentInterval.from - 1 }
-        }
-        if (i > 0) {
-            previousNotMatchingInterval = { from: intervals[i - 1].to + 1, to: currentInterval.from - 1 }
-        }
+        const previousNotMatchingInterval = calculatePreviousNotMatchingInterval(intervals, i);
         if (previousNotMatchingInterval !== null) {
             result = result - intervalSize(previousNotMatchingInterval) / strLength
         }
@@ -214,13 +220,7 @@ export class Fuzzy {
         const post = conf?.post ? conf.post : this.conf.post
         for (let i = 0; i < intervals.length; i++) {
             const currentInterval = intervals[i]
-            let previousNotMatchingInterval = null;
-            if (i === 0 && currentInterval.from !== 0) {
-                previousNotMatchingInterval = { from: 0, to: currentInterval.from - 1 }
-            }
-            if (i > 0) {
-                previousNotMatchingInterval = { from: intervals[i - 1].to + 1, to: currentInterval.from - 1 }
-            }
+            const previousNotMatchingInterval = calculatePreviousNotMatchingInterval(intervals, i);
             let previousStr = ''
             if (previousNotMatchingInterval !== null) {
                 previousStr = this.extractSubString(text, previousNotMatchingInterval, conf)
