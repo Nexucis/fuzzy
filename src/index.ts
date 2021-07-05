@@ -226,7 +226,7 @@ export class Fuzzy {
                 previousStr = this.extractSubString(text, previousNotMatchingInterval, conf)
             }
             const currentStr = this.extractSubString(text, currentInterval, conf)
-            rendered = rendered + previousStr + pre + currentStr + post
+            rendered = `${rendered}${previousStr}${pre}${currentStr}${post}`
         }
 
         // check if the last interval contains the end of the string. Otherwise add it
