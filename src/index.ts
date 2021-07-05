@@ -249,3 +249,17 @@ export class Fuzzy {
         return str
     }
 }
+
+const fuz = new Fuzzy()
+
+export function filter(pattern: string, list: string[], conf?: FuzzyConfiguration): FuzzyResult[] {
+    return fuz.filter(pattern, list, conf)
+}
+
+export function match(pattern: string, text: string, conf?: FuzzyConfiguration): FuzzyResult | null {
+    return fuz.match(pattern, text, conf)
+}
+
+export function render(text: string, intervals: FuzzyMatchingInterval[], conf?: FuzzyConfiguration): string {
+    return fuz.render(text, intervals, conf)
+}
