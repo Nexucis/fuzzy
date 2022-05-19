@@ -1,12 +1,17 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "target": "es2015",
+    "target": "ES2018",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "module": "esnext",
     "declaration": true,
-    "outDir": "./lib",
-    "module": "commonjs",
+    "outDir": "./dist",
     "sourceMap": false,
-    "strict": true,
+    "strict": true
   },
   "include": [
     "src",
