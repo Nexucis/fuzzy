@@ -8,8 +8,8 @@
   "scripts": {
     "build": "tsc",
     "build:cjs": "tsc --project ./tsconfig.cjs.json",
-    "test": "mocha -r ts-node/register src/**/*.test.ts",
-    "test-coverage": "nyc mocha -r ts-node/register src/**/*.test.ts",
+    "test": "ts-mocha -n loader=ts-node/esm -p tsconfig.cjs.json src/**/*.test.ts",
+    "test-coverage": "nyc ts-mocha -n loader=ts-node/esm -p tsconfig.cjs.json src/**/*.test.ts",
     "codecov": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "lint": "eslint src/ --ext .ts",
     "lint:fix": "eslint --fix src/ --ext .ts"
@@ -39,8 +39,9 @@
     "eslint": "^8.15.0",
     "eslint-plugin-flowtype": "^8.0.3",
     "eslint-plugin-import": "^2.26.0",
-    "mocha": "^10.0.0",
+    "mocha": "^9.2.2",
     "nyc": "^15.1.0",
+    "ts-mocha": "^9.0.2",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.4"
   }
