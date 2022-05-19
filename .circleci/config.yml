@@ -9,10 +9,11 @@ jobs:
       - checkout
       - node/install-packages
       - run: npm run build
+      - run: npm run build:cjs
       - persist_to_workspace:
           root: ~/project
           paths:
-            - lib
+            - dist
   test:
     executor:
       name: node/default
@@ -39,9 +40,7 @@ jobs:
       - run:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/project/.npmrc
-      - run: cp ~/project/README.md ~/project/lib/README.md
-      - run: cp ~/project/package.json ~/project/lib/package.json
-      - run: npm publish ~/project/lib --access public
+      - run: npm publish . --access public
 
 workflows:
   version: 2
