@@ -215,6 +215,10 @@ export class Fuzzy {
     // render will modify the text according to the different parameter set in the conf.
     // If nothing is set, then it will return the text not modified.
     render(text: string, intervals: FuzzyMatchingInterval[], conf?: FuzzyConfiguration): string {
+        if (intervals.length == 0) {
+            return text
+        }
+
         let rendered = ''
         const pre = conf?.pre ? conf.pre : this.conf.pre
         const post = conf?.post ? conf.post : this.conf.post
@@ -229,7 +233,7 @@ export class Fuzzy {
             rendered = `${rendered}${previousStr}${pre}${currentStr}${post}`
         }
 
-        // check if the last interval contains the end of the string. Otherwise add it
+        // check if the last interval contains the end of the string. Otherwise, add it
         const lastInterval = intervals[intervals.length - 1]
         if (lastInterval.to < text.length - 1) {
             rendered = rendered + this.extractSubString(text, { from: lastInterval.to + 1, to: text.length }, conf)
