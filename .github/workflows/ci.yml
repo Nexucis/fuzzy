@@ -5,6 +5,9 @@ on:
       - master
   pull_request:
   merge_group:
+  release:
+    types:
+      - published
 
 jobs:
 
