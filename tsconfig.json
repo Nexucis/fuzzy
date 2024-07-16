@@ -8,6 +8,7 @@
       "esnext"
     ],
     "module": "esnext",
+    "moduleResolution": "node",
     "declaration": true,
     "outDir": "./dist",
     "sourceMap": false,
