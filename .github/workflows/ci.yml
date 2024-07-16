@@ -19,6 +19,33 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run build:cjs
+      - name: store dist folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            ./dist
+            !node_modules
+
+  release:
+    name: "release"
+    needs: "build"
+    if: ${{ github.event.release.tag_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup npm environment
+        uses: ./.github/actions/setup
+        env:
+          # The setup-node action writes an .npmrc file with this env variable
+          # as the placeholder for the auth token
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Download dist folder
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+      - run: npm publish . --access public
   test:
     name: "test"
     runs-on: ubuntu-latest

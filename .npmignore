@@ -4,3 +4,4 @@ tsconfig.cjs.json
 tsconfig.json
 .eslintrc.json
 .circleci/
+.github/
