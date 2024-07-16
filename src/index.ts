@@ -73,37 +73,11 @@ export function score(intervals: FuzzyMatchingInterval[], strLength: number): nu
     return result
 }
 
-// generateMatchingInterval will iterate other the given text to find the different char that matched the given pattern
-function generateMatchingInterval(pattern: string, text: string, idxText: number): null | {
-    score: number;
-    intervals: FuzzyMatchingInterval[]
-} {
-    let patternIdx = 0;
-    const intervals = [];
-    for (let i = idxText; i < text.length && patternIdx < pattern.length;) {
-        if (text[i] === pattern[patternIdx]) {
-            const interval = { from: i, to: i }
-            patternIdx++;
-            i++;
-            for (let j = i; j < text.length && patternIdx < pattern.length && text[j] === pattern[patternIdx]; j++) {
-                interval.to = j
-                patternIdx++
-                i = j
-            }
-            intervals.push(interval)
-        }
-        i++;
-    }
-    if (intervals.length === 0 || patternIdx !== pattern.length) {
-        return null;
-    }
-    return { score: score(intervals, text.length), intervals: intervals }
-}
-
 export interface FuzzyConfiguration {
     caseSensitive?: boolean;
-    // List of characters that should be ignored when searching the pattern in the string
+    // List of characters that should be ignored in the pattern or in the word used for matching
     excludedChars?: string[];
+    // Whenever the result should contain the list of intervals.
     includeMatches?: boolean;
     // If true, results will be sorted based on the score.
     shouldSort?: boolean;
@@ -211,7 +185,7 @@ export class Fuzzy {
             // For example, given the pattern `bac` and the text `babac`
             // instead of matching `<ba>ba<c>, it will match ba<bac> which has a better score than the previous one.
             if (localText[i] === localPattern[0]) {
-                const matchingResult = generateMatchingInterval(localPattern, localText, i);
+                const matchingResult = this.generateMatchingInterval(localPattern, localText, i, conf);
                 if (matchingResult === null) {
                     break
                 }
@@ -271,6 +245,47 @@ export class Fuzzy {
             str = escapeHTML(str)
         }
         return str
+    }
+
+    // generateMatchingInterval will iterate other the given text to find the different char that matched the given pattern
+    private generateMatchingInterval(pattern: string, text: string, idxText: number, conf?: FuzzyConfiguration): null | {
+        score: number;
+        intervals: FuzzyMatchingInterval[]
+    } {
+        let excludedChars: string[] = []
+        if (conf?.excludedChars !== undefined) {
+            excludedChars = conf.excludedChars
+        } else if (this.conf.excludedChars !== undefined) {
+            excludedChars = this.conf.excludedChars
+        }
+        let patternIdx = 0;
+        const intervals = [];
+        for (let i = idxText; i < text.length && patternIdx < pattern.length;) {
+            if (excludedChars.includes(text[i])) {
+                i++
+                continue
+            }
+            if (excludedChars.includes(pattern[patternIdx])) {
+                patternIdx++
+                continue
+            }
+            if (text[i] === pattern[patternIdx]) {
+                const interval = { from: i, to: i }
+                patternIdx++;
+                i++;
+                for (let j = i; j < text.length && patternIdx < pattern.length && text[j] === pattern[patternIdx]; j++) {
+                    interval.to = j
+                    patternIdx++
+                    i = j
+                }
+                intervals.push(interval)
+            }
+            i++;
+        }
+        if (intervals.length === 0 || patternIdx !== pattern.length) {
+            return null;
+        }
+        return { score: score(intervals, text.length), intervals: intervals }
     }
 }
 

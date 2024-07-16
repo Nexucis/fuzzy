@@ -85,6 +85,13 @@ The options passed in the method take precedence over the one passed in the cont
 
 Indicates whether comparisons should be case-sensitive.
 
+### excludedChars
+
+* **Type**: `array of string`
+* **Default**: `[]`
+
+List of characters that should be ignored in the pattern or in the word used for matching
+
 ### includeMatches
 
 * **Type**: `boolean`

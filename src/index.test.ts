@@ -189,6 +189,19 @@ describe('partial match test', () => {
             },
         },
         {
+            title: 'default conf: ignoring space',
+            pattern: 'my awesome text',
+            text: 'my-awesome-text',
+            config: {
+                excludedChars: [' '],
+            },
+            result: {
+                original: 'my-awesome-text',
+                rendered: 'my-awesome-text',
+                score: 68.86666666666666,
+            },
+        },
+        {
             title: 'rendering conf: fuzzy match',
             pattern: 'met',
             text: 'my awesome text',
