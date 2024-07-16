@@ -54,10 +54,10 @@ function calculatePreviousNotMatchingInterval(intervals: FuzzyMatchingInterval[]
 }
 
 // score should be used to calculate the score based on the intervals created during the matching step.
-// Here is how the score is determinated:
+// Here is how the score is determinate:
 //   1. Consecutive characters should increase the score more than linearly
-//   2. More there is a distance between the characters, higher it reduces the score
-//      For example, for the pattern 'abc', the following string are sorted by the highest score
+//   2. More there is a distance between the characters, higher it reduces the score.
+//      For example, for the pattern 'abc', the following strings are sorted by the highest score
 //      abcdef > defabc > abec > defabec
 // Note: this function is exported only for testing purpose.
 export function score(intervals: FuzzyMatchingInterval[], strLength: number): number {
@@ -74,7 +74,10 @@ export function score(intervals: FuzzyMatchingInterval[], strLength: number): nu
 }
 
 // generateMatchingInterval will iterate other the given text to find the different char that matched the given pattern
-function generateMatchingInterval(pattern: string, text: string, idxText: number): null | { score: number; intervals: FuzzyMatchingInterval[] } {
+function generateMatchingInterval(pattern: string, text: string, idxText: number): null | {
+    score: number;
+    intervals: FuzzyMatchingInterval[]
+} {
     let patternIdx = 0;
     const intervals = [];
     for (let i = idxText; i < text.length && patternIdx < pattern.length;) {
@@ -99,14 +102,31 @@ function generateMatchingInterval(pattern: string, text: string, idxText: number
 
 export interface FuzzyConfiguration {
     caseSensitive?: boolean;
+    // List of characters that should be ignored when searching the pattern in the string
+    excludedChars?: string[];
     includeMatches?: boolean;
+    // If true, results will be sorted based on the score.
     shouldSort?: boolean;
+    // If true, then the strings matched will be automatically rendered using the config pre/post and escapeHTML.
+    // By default, shouldRender is set to true.
+    // In case you want to render it yourself, set it to false, and set `includeMatches` to true.
+    // You will need the intervals to call the method render.
+    shouldRender?: boolean;
     // escapeHTML will escape any HTML tag and special char after applying the rendering
     escapeHTML?: boolean;
+    // The string value that will be used during the rendering process.
+    // It will be placed before each succession of chars that are matching.
     pre?: string;
+    // The string value that will be used during the rendering process.
+    // It will be placed after each succession of chars that are matching.
     post?: string;
 }
 
+
+// FuzzyMatchingInterval represents the start and the end position of the continuous characters that is matching the pattern.
+// For example, for the pattern `bc`, with the string`abcd`, the corresponding interval will be [{from: 1, to: 2}]
+// Another example, for the pattern `fuz`, with the string `fzduzf`, the corresponding intervals will be:
+// [ { from: 0, to: 0 }, { from: 3, to: 4 } ]
 export interface FuzzyMatchingInterval {
     from: number;
     to: number;
@@ -126,9 +146,11 @@ export class Fuzzy {
     constructor(conf?: FuzzyConfiguration) {
         this.conf = {
             caseSensitive: conf?.caseSensitive === undefined ? false : conf.caseSensitive,
+            excludedChars: conf?.excludedChars === undefined ? [] : conf.excludedChars,
             includeMatches: conf?.includeMatches === undefined ? false : conf.includeMatches,
             shouldSort: conf?.shouldSort === undefined ? false : conf.shouldSort,
-            escapeHTML:conf?.escapeHTML === undefined ? false : conf.escapeHTML,
+            shouldRender: conf?.shouldRender === undefined ? true : conf.shouldRender,
+            escapeHTML: conf?.escapeHTML === undefined ? false : conf.escapeHTML,
             pre: conf?.pre === undefined ? '' : conf.pre,
             post: conf?.post === undefined ? '' : conf.post,
         }
@@ -160,6 +182,7 @@ export class Fuzzy {
         let localText = text
         const caseSensitive = conf?.caseSensitive !== undefined ? conf.caseSensitive : this.conf.caseSensitive
         const includeMatches = conf?.includeMatches !== undefined ? conf.includeMatches : this.conf.includeMatches
+        const shouldRender = conf?.shouldRender !== undefined ? conf.shouldRender : this.conf.shouldRender
 
         if (!caseSensitive) {
             localPattern = localPattern.toLowerCase()
@@ -170,7 +193,7 @@ export class Fuzzy {
             const intervals = [{ from: 0, to: pattern.length - 1 }]
             const result = {
                 original: text,
-                rendered: this.render(text, intervals, conf),
+                rendered: shouldRender ? this.render(text, intervals, conf) : text,
                 score: Infinity,
             } as FuzzyResult
             if (includeMatches) {
@@ -178,14 +201,14 @@ export class Fuzzy {
             }
             return result
         }
-        // otherwise let's calculate the different indices that will then be used to calculate the score
+        // otherwise, let's calculate the different indices that will then be used to calculate the score
         let intervals: FuzzyMatchingInterval[] = [];
         let score = 0
-        for (let i = 0; i < localText.length - localPattern.length +1; i++) {
+        for (let i = 0; i < localText.length - localPattern.length + 1; i++) {
             // Each time a char is matching the first char of the pattern
             // loop other the rest of the text to generate the different matching interval.
-            // Like that we will be able to find the best matching possibility.
-            // For example: given the pattern `bac` and the text `babac`
+            // Like that, we will be able to find the best matching possibility.
+            // For example, given the pattern `bac` and the text `babac`
             // instead of matching `<ba>ba<c>, it will match ba<bac> which has a better score than the previous one.
             if (localText[i] === localPattern[0]) {
                 const matchingResult = generateMatchingInterval(localPattern, localText, i);
@@ -203,7 +226,7 @@ export class Fuzzy {
         }
         const result = {
             original: text,
-            rendered: this.render(text, intervals, conf),
+            rendered: shouldRender ? this.render(text, intervals, conf) : text,
             score: score,
         } as FuzzyResult
         if (includeMatches) {
