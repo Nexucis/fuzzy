@@ -1,0 +1,42 @@
+name: ci
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  merge_group:
+
+jobs:
+
+  build:
+    name: "build"
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup npm environment
+        uses: ./.github/actions/setup
+      - run: npm ci
+      - run: npm run build
+      - run: npm run build:cjs
+  test:
+    name: "test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup npm environment
+        uses: ./.github/actions/setup
+      - run: npm ci
+      - run: npm test
+
+  lint:
+    name: "lint"
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup npm environment
+        uses: ./.github/actions/setup
+      - run: npm ci
+      - run: npm run lint
