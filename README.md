@@ -100,6 +100,16 @@ These can consequently be used for highlighting purposes.
 
 Whether the result should be sorted
 
+### shouldRender
+
+* **Type**: `boolean`
+* **Default**: `true`
+
+If true, then the strings matched will be automatically rendered using the config pre/post and escapeHTML.
+
+In case you want to render it yourself, set it to false, and set `includeMatches` to true.
+You will need the intervals to call the method render.
+
 ### escapeHTML
 
 * **Type**: `boolean`
